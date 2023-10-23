@@ -2,7 +2,7 @@
 Code for this homework can be found at `src/sar_course/hw1.py
 
 ## 1
-to do
+The recieved waveform will have a "half baguette" shape that gets thinner and thinner (e.g., increasing frequency) as the boat gets closer to the transmitter.
 
 ## 2
 ###### a
