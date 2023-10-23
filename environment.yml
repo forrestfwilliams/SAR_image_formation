@@ -9,6 +9,7 @@ dependencies:
   - tqdm
   - numpy
   - scipy
+  - matplotlib
   # For packaging, and testing
   - pytest
   - pytest-cov
