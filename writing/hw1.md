@@ -5,18 +5,18 @@ Code for this homework can be found at `src/sar_course/hw1.py
 to do
 
 ## 2
-### a
+###### a
 4.35 dB
-### b
+###### b
 22.41 dB
 The SNR is much higher in this case because decreasing the wavelength increase the gain exponentially
 
 ## 3
 All designs with use an antenna efficiency of 50% and a noise temperature of 900K.
-### a
+###### a
 For L-band, using a peak transmit power of 350 Watts, we can achieve an SNR of 10.35 dB.
-### b
+###### b
 For C-band, using a peak transmit power of 90 Watts, we can achieve an SNR of 10.48 dB.
 For K-band, using a peak transmit power of 30 Watts, we can achieve an SNR of 10.48 dB.
-### c
+###### c
 In this case, SNR still increases with frequency, but it does so linearly instead of exponentially.
