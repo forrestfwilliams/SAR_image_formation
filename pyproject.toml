@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+
+[project]
+name = "sar_course"
+requires-python = ">=3.10"
+dynamic = ["version"]
+authors = [
+    {name="Forrest Williams", email="ffwilliams2@alaska.edu"},
+]
+description = "Homework associated with JPL's 2023 SAR Image Formation Course"
+readme = "README.md"
+classifiers=[
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+  "gdal",
+  "numpy",
+  "scipy",
+]
+
+[project.urls]
+Homepage = "https://github.com/forrestfwilliams/SAR_image_formation"
+"Bug Tracker" ="https://github.com/forrestfwilliams/SAR_image_formation/issues"
+
+[project.scripts]
+
+[project.optional-dependencies]
+develop = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = '-ra -q -m "not integration"'
+markers = ["integration"]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+include = '\.pyx?$'
+
+[tool.ruff]
+line-length = 120

@@ -1,4 +1,3 @@
-
 name: sar_course
 channels:
   - conda-forge
