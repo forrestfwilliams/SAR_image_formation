@@ -3,7 +3,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from sar_course.processor import Chirp, ERS_HEADER_LENGTH, matched_filter
+from sar_course.processor import Chirp, matched_filter, parse_ers
 
 DATA_PATH = Path('~/Documents/SAR_theory_course/data').expanduser()
 
@@ -45,26 +45,6 @@ def make_multi_chirp(show=False):
     return signal
 
 
-def parse_ers_line(line, pad_to=None):
-    digital_number = np.frombuffer(line[412:], dtype=np.int8).astype(float)
-    digital_number -= 15.5
-    data = digital_number[::2] + 1j * digital_number[1::2]
-    if pad_to is not None:
-        padded = np.zeros((pad_to), dtype=np.complex64)
-        padded[: data.shape[0]] = data.copy()
-        data = padded.copy()
-    return data
-
-
-def parse_ers(file_path, n_lines=1024, n_samples=4903, pad_to=8192):
-    ers_data = np.zeros((n_lines, pad_to), dtype=np.csingle)
-    with open(file_path, 'rb') as f:
-        for i in range(n_lines):
-            # each complex number takes 2 bytes to represent
-            line = f.read(ERS_HEADER_LENGTH + n_samples * 2)
-            row = parse_ers_line(line, pad_to=pad_to)
-            ers_data[i, :] = row
-    return ers_data
 
 
 def plot_spectral_average(data, show=False):
@@ -89,14 +69,14 @@ def plot_image(image, show=False):
 if __name__ == '__main__':
     show = True
 
-    chirp = Chirp(1e12, 1e-5, 1e8, min_samples=2048)
-    chirp.plot(show=show)
-    plot_auto_convolve(chirp, show=show)
-    make_multi_chirp(show=show)
+    # chirp = Chirp(1e12, 1e-5, 1e8, min_samples=2048)
+    # chirp.plot(show=show)
+    # plot_auto_convolve(chirp, show=show)
+    # make_multi_chirp(show=show)
 
-    data = parse_ers(DATA_PATH / 'ersdata.dat')
+    data = parse_ers(DATA_PATH / 'ersdata.dat', n_lines=1024)
     chirp = Chirp(4.189166e11, 37.12e-6, 18.96e6, min_samples=data.shape[1])
-    chirp.plot(show=show)
-    plot_spectral_average(data, show=show)
+    # chirp.plot(show=show)
+    # plot_spectral_average(data, show=show)
     _, compressed = matched_filter(data, chirp.chirp)
     plot_image(compressed, show=show)

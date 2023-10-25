@@ -44,3 +44,25 @@ def matched_filter(signal, reference):
     spectrum = signal_fft * np.conjugate(reference_fft)
     compressed = np.fft.ifft(spectrum)
     return spectrum, compressed
+
+
+def parse_ers_line(line, pad_to=None):
+    digital_number = np.frombuffer(line[412:], dtype=np.int8).astype(float)
+    digital_number -= 15.5
+    data = digital_number[::2] + 1j * digital_number[1::2]
+    if pad_to is not None:
+        padded = np.zeros((pad_to), dtype=np.complex64)
+        padded[: data.shape[0]] = data.copy()
+        data = padded.copy()
+    return data
+
+
+def parse_ers(file_path, n_lines, n_samples=4903, pad_to=8192):
+    ers_data = np.zeros((n_lines, pad_to), dtype=np.csingle)
+    with open(file_path, 'rb') as f:
+        for i in range(n_lines):
+            # each complex number takes 2 bytes to represent
+            line = f.read(ERS_HEADER_LENGTH + n_samples * 2)
+            row = parse_ers_line(line, pad_to=pad_to)
+            ers_data[i, :] = row
+    return ers_data
