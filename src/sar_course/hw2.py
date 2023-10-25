@@ -3,63 +3,9 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-ERS_HEADER_LENGTH = 412
+from sar_course.processor import Chirp, ERS_HEADER_LENGTH, matched_filter
+
 DATA_PATH = Path('~/Documents/SAR_theory_course/data').expanduser()
-
-
-class Chirp:
-    def __init__(self, freq_slope, pulse_length, sample_rate, freq_center=0, starting_phase=0, min_samples=0):
-        self.freq_center = freq_center
-        self.freq_slope = freq_slope
-        self.pulse_length = pulse_length
-        self.sample_rate = sample_rate
-        self.min_samples = min_samples
-        self.sample_interval = 1 / sample_rate
-        self.n_points = int(self.pulse_length * self.sample_rate)
-
-        time = self.sample_interval * np.arange(-self.n_points / 2, self.n_points / 2)
-        phase = np.pi * freq_slope * (time**2) + 2 * np.pi * freq_center * time + starting_phase
-        chirp = np.exp(1j * phase)
-        n_missing = min_samples - chirp.shape[0]
-        if n_missing > 0:
-            chirp = np.pad(chirp, (0, n_missing))
-        self.chirp = chirp
-        self.time = self.sample_interval * np.arange(0, self.chirp.shape[0])
-
-        # start_time = -self.pulse_length / 2
-        # end_time = self.pulse_length / 2
-        # self.time = np.linspace(start_time, end_time, self.n_valid, endpoint=False)
-        # chirp = np.exp(0 - 1j * (np.pi * self.freq_slope * self.time**2 + 2 * np.pi * self.freq_center * self.time))
-        # n_missing = min_samples - chirp.shape[0]
-        # if n_missing > 0:
-        #     zero_fill = np.zeros((n_missing), dtype=np.complex64)
-        #     chirp = np.append(chirp, zero_fill)
-        #     added_time = np.linspace(end_time, end_time + (n_missing * self.sample_interval), n_missing, endpoint=False)
-        #     self.time = np.append(self.time, added_time)
-        #
-        # self.chirp = chirp
-        # self.n_samples = self.chirp.shape[0]
-        # self.total_time = (self.n_samples / self.n_valid) * self.pulse_length
-
-    def plot(self, show=False):
-        chirp_power = np.abs(np.fft.fftshift(np.fft.fft(self.chirp)))
-        chirp_power_db = 20 * np.log10(chirp_power)
-        f, ax = plt.subplots(1, 1, figsize=(8, 8))
-        ax.plot(self.time, chirp_power_db)
-        ax.set(xlabel='Pulse Time (s)', ylabel='Power (dB)')
-        if show:
-            plt.show()
-        else:
-            plt.savefig('../../assets/chirp_spectrum.png')
-        plt.close('all')
-
-
-def matched_filter(signal, reference):
-    signal_fft = np.fft.fft(signal)
-    reference_fft = np.fft.fft(reference)
-    spectrum = signal_fft * np.conjugate(reference_fft)
-    compressed = np.fft.ifft(spectrum)
-    return spectrum, compressed
 
 
 def plot_auto_convolve(chirp, show=False):
@@ -84,7 +30,7 @@ def make_multi_chirp(show=False):
     signal[100 : 100 + base_chirp.chirp.shape[0]] += 1 * base_chirp.chirp
     signal[400 : 400 + base_chirp.chirp.shape[0]] += 5 * base_chirp.chirp
     signal[500 : 500 + base_chirp.chirp.shape[0]] += 2 * base_chirp.chirp
-    
+
     padded_chirp = Chirp(1e12, 1e-5, 1e8, min_samples=2048)
     _, compressed = matched_filter(signal, padded_chirp.chirp)
 
