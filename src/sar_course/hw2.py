@@ -45,8 +45,6 @@ def make_multi_chirp(show=False):
     return signal
 
 
-
-
 def plot_spectral_average(data, show=False):
     average = np.abs(np.fft.fft(data)).mean(axis=0)
     f, ax = plt.subplots(1, 1, figsize=(8, 8))
@@ -69,14 +67,14 @@ def plot_image(image, show=False):
 if __name__ == '__main__':
     show = True
 
-    # chirp = Chirp(1e12, 1e-5, 1e8, min_samples=2048)
-    # chirp.plot(show=show)
-    # plot_auto_convolve(chirp, show=show)
-    # make_multi_chirp(show=show)
+    chirp = Chirp(1e12, 1e-5, 1e8, min_samples=2048)
+    chirp.plot(show=show)
+    plot_auto_convolve(chirp, show=show)
+    make_multi_chirp(show=show)
 
     data = parse_ers(DATA_PATH / 'ersdata.dat', n_lines=1024)
     chirp = Chirp(4.189166e11, 37.12e-6, 18.96e6, min_samples=data.shape[1])
-    # chirp.plot(show=show)
-    # plot_spectral_average(data, show=show)
+    chirp.plot(show=show)
+    plot_spectral_average(data, show=show)
     _, compressed = matched_filter(data, chirp.chirp)
     plot_image(compressed, show=show)
