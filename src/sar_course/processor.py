@@ -56,12 +56,12 @@ def parse_ers_line(line, pad_to=None):
     return data
 
 
-def parse_ers(file_path, n_lines, n_samples=4903, pad_to=8192):
-    ers_data = np.zeros((n_lines, pad_to), dtype=np.csingle)
+def parse_ers(file_path, n_lines, n_samples=4903, pad_to=0):
+    ers_data = np.zeros((n_lines, max(n_samples, pad_to)), dtype=np.csingle)
     with open(file_path, 'rb') as f:
         for i in range(n_lines):
             # each complex number takes 2 bytes to represent
             line = f.read(ERS_HEADER_LENGTH + n_samples * 2)
-            row = parse_ers_line(line, pad_to=pad_to)
+            row = parse_ers_line(line, pad_to=ers_data.shape[1])
             ers_data[i, :] = row
     return ers_data
