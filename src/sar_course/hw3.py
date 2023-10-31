@@ -1,6 +1,7 @@
 from pathlib import Path
 import numpy as np
 
+import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 
 from sar_course.processor import Chirp, matched_filter, parse_ers

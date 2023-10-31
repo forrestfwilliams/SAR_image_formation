@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+ERS_HEADER_LENGTH = 412
+
 
 def plot_freq(
     freq,
@@ -29,6 +31,7 @@ def plot_freq(
     plt.xlabel(x)
     plt.ylabel(y)
     plt.show()
+    plt.close('all')
 
 
 def plot_time(
@@ -51,9 +54,20 @@ def plot_time(
     plt.xlabel(x)
     plt.ylabel(y)
     plt.show()
+    plt.close('all')
 
 
-def plot_img(data, nhdr=0, title='Data', scale=1, vlim=[None, None], origin='upper', savetif=None):
+def plot_img(
+    data,
+    nhdr=0,
+    title='Data',
+    scale=1,
+    vlim=[None, None],
+    origin='upper',
+    aspect="equal",
+    interpolation='none',
+    savetif=None,
+):
     if scale > 1:
         clabel = 'Value * {} [-]'.format(scale)
     else:
@@ -65,17 +79,42 @@ def plot_img(data, nhdr=0, title='Data', scale=1, vlim=[None, None], origin='upp
 
     # plot the 2D image
     plt.figure(figsize=[14, 14])
-    im = plt.imshow(val, cmap='gray', interpolation='none', vmin=vlim[0], vmax=vlim[1], origin=origin)
+    im = plt.imshow(
+        val, cmap='gray', interpolation=interpolation, vmin=vlim[0], vmax=vlim[1], origin=origin, aspect=aspect
+    )
     cbar = plt.colorbar(im, shrink=0.3, pad=0.02)
     cbar.set_label(clabel, rotation=270, labelpad=30)
     plt.title(title)
-    plt.xlabel('Range [samples]')
+    plt.xlabel('Range [bins]')
     plt.ylabel('Azimuth [lines]')
     if savetif is not None:
         plt.savefig('{}'.format(savetif), format='tif')
     plt.show()
+    plt.close('all')
 
 
 def to_mag_db(data):
     mag_db = 20 * np.log10(np.abs(data) + 1e-30)
     return mag_db
+
+
+def parse_ers_line(line, pad_to=None):
+    digital_number = np.frombuffer(line[412:], dtype=np.int8).astype(float)
+    digital_number -= 15.5
+    data = digital_number[::2] + 1j * digital_number[1::2]
+    if pad_to is not None:
+        padded = np.zeros((pad_to), dtype=np.complex64)
+        padded[: data.shape[0]] = data.copy()
+        data = padded.copy()
+    return data
+
+
+def parse_ers(file_path, n_lines, n_samples=4903, pad_to=0):
+    ers_data = np.zeros((n_lines, max(n_samples, pad_to)), dtype=np.csingle)
+    with open(file_path, 'rb') as f:
+        for i in range(n_lines):
+            # each complex number takes 2 bytes to represent
+            line = f.read(ERS_HEADER_LENGTH + n_samples * 2)
+            row = parse_ers_line(line, pad_to=ers_data.shape[1])
+            ers_data[i, :] = row
+    return ers_data
