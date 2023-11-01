@@ -2,12 +2,24 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+from sar_course.utils import to_mag_db, plot_time
+
 EARTH_RADIUS = 6378 * 1e3
 SPEED_OF_LIGHT = 2.99792458e8
 
 
 class Chirp:
-    def __init__(self, freq_slope, pulse_length, sample_rate, freq_center=0, starting_phase=0, min_samples=None):
+    def __init__(self, freq_slope, pulse_length, sample_rate, freq_center=0, start=0, min_samples=None):
+        """Create a chirp signal.
+
+        Args:
+            freq_slope: Slope of the chirp in Hz/s.
+            pulse_length: Length of the chirp in seconds.
+            sample_rate: Sample rate of the chirp in Hz.
+            freq_center: Center frequency of the chirp in Hz.
+            starting_phase: Starting phase of the chirp in radians.
+            min_samples: Minimum number of samples in the chirp.
+        """
         self.freq_center = freq_center
         self.freq_slope = freq_slope
         self.pulse_length = pulse_length
@@ -19,24 +31,26 @@ class Chirp:
         self.n_points = self.pulse_length * self.sample_rate
         time = self.sample_interval * np.arange(-self.n_points / 2, self.n_points / 2)
 
-        phase = np.pi * freq_slope * (time**2) + 2 * np.pi * self.freq_center * time + starting_phase
+        phase = np.pi * freq_slope * (time**2) + 2 * np.pi * self.freq_center * time
         chirp = np.exp(1j * phase)
         total_points = chirp.shape[0] if min_samples is None else min_samples
-        chirp = np.pad(chirp, (0, total_points - chirp.shape[0]))
+        chirp = np.pad(chirp, (start, total_points - chirp.shape[0] - start))
 
         self.chirp = chirp
         self.time = self.sample_interval * np.arange(0, total_points)
+        self.total_points = total_points
 
-    def plot(self, show=False):
-        chirp_power = np.abs(np.fft.fftshift(np.fft.fft(self.chirp)))
-        chirp_power_db = 20 * np.log10(chirp_power)
+    def plot_frequency(self):
+        chirp_power = np.fft.fftshift(np.fft.fft(self.chirp))
+        chirp_power_db = to_mag_db(chirp_power)
         f, ax = plt.subplots(1, 1, figsize=(8, 8))
         ax.plot(self.time, chirp_power_db)
         ax.set(xlabel='Pulse Time (s)', ylabel='Power (dB)')
-        if show:
-            plt.show()
-        else:
-            plt.savefig('../../assets/chirp_spectrum.png')
+        plt.show()
+        plt.close('all')
+
+    def plot_time(self):
+        plot_time(self.time, self.chirp, title='Chirp', unit='micros', plotcomplex=True)
         plt.close('all')
 
 
@@ -161,3 +175,23 @@ def azimuth_multilook(data, n_patches, patch_n_lines, n_valid, n_looks):
             patch = data[patch_start + j * n_looks : patch_start + (j + 1) * n_looks, :]
             multilooked[j + k * patch_n_lines, :] = np.mean(np.abs(patch), axis=0)
     return multilooked
+
+
+def makechirp(N, slope, tau, fs, fc=0, start=0, phi0=0):
+    """ Make a reference chirp pulse
+    N:     Num of points of the whole pulse   [#]
+    slope: slope of the chirp                 [Hz/s]
+    tau:   chirp length                       [s]
+    fs:    sample rate                        [Hz]
+    fc:    central carrier freq               [Hz]
+    start: starting sample # of the chirp     [#]
+    """
+    dt    = 1/fs                                        # sampling time interval          [s]
+    npts  = tau * fs                                    # num of points of the pure chirp [#]
+    t     = dt * np.arange(-npts/2, npts/2)             # time axis of the pure chirp     [s]
+    phase = np.pi*slope*(t**2) + 2*np.pi*fc*t + phi0    # chirp phase                     [rad]
+    chirp = np.exp(1j*phase)                            # chirp                           (cmplx)
+    chirp = np.pad(chirp, (start,N-len(chirp)-start))   # pad zeros at tail and beginning (cmplx)
+    t_arr = dt * np.arange(0, N)                        # time axis of the whole pulse    [s]
+    #print('Chirp starts from {} samples, {} mu s'.format(start, 1e6*(start/fs)))
+    return chirp, t_arr

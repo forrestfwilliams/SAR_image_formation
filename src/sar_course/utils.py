@@ -35,7 +35,16 @@ def plot_freq(
 
 
 def plot_time(
-    t, val, title, x=r'Time', y='amplitude [-]', xlim=[None, None], ylim=[None, None], unit='micros', shift=False
+    t,
+    val,
+    title,
+    x=r'Time',
+    y='amplitude [-]',
+    xlim=[None, None],
+    ylim=[None, None],
+    unit='micros',
+    shift=False,
+    plotcomplex=False,
 ):
     if unit == 'micros':
         x += r' [$\mu$ s]'
@@ -46,7 +55,12 @@ def plot_time(
     if shift:
         val = np.fft.fftshift(val)
     plt.figure(figsize=[14, 4])
-    plt.plot(t * u, val)
+    if plotcomplex:
+        plt.plot(t * u, np.real(val), label='Real part')
+        plt.plot(t * u, np.imag(val), label='Imaginary part')
+        plt.legend(loc='upper right')
+    else:
+        plt.plot(t * u, val)
     plt.title(title)
     plt.xlim(min(t) * u, max(t) * u)
     plt.xlim(xlim[0], xlim[1])
@@ -54,7 +68,6 @@ def plot_time(
     plt.xlabel(x)
     plt.ylabel(y)
     plt.show()
-    plt.close('all')
 
 
 def plot_img(
