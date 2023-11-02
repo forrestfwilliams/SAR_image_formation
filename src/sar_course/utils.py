@@ -75,11 +75,18 @@ def plot_img(
     nhdr=0,
     title='Data',
     scale=1,
+    cmap='gray',
     vlim=[None, None],
     origin='upper',
     aspect="equal",
+    xlabel='Range [bins]',
+    ylabel='Azimuth [lines]',
     interpolation='none',
     savetif=None,
+    figsize=[6, 6],
+    lim=[None, None, None, None],
+    ex=None,
+    yticks=None,
 ):
     if scale > 1:
         clabel = 'Value * {} [-]'.format(scale)
@@ -91,19 +98,22 @@ def plot_img(
     val[:, nhdr:] = scale * val[:, nhdr:]
 
     # plot the 2D image
-    plt.figure(figsize=[14, 14])
+    plt.figure(figsize=figsize)
     im = plt.imshow(
-        val, cmap='gray', interpolation=interpolation, vmin=vlim[0], vmax=vlim[1], origin=origin, aspect=aspect
+        val, cmap=cmap, interpolation=interpolation, vmin=vlim[0], vmax=vlim[1], origin=origin, aspect=aspect, extent=ex
     )
     cbar = plt.colorbar(im, shrink=0.3, pad=0.02)
     cbar.set_label(clabel, rotation=270, labelpad=30)
     plt.title(title)
-    plt.xlabel('Range [bins]')
-    plt.ylabel('Azimuth [lines]')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.xlim(lim[0], lim[1])
+    plt.ylim(lim[2], lim[3])
+    if (yticks is not None) and (len(yticks) == 3):
+        plt.yticks(np.linspace(lim[2], lim[3], yticks[2]), np.linspace(yticks[0], yticks[1], yticks[2]))
     if savetif is not None:
         plt.savefig('{}'.format(savetif), format='tif')
     plt.show()
-    plt.close('all')
 
 
 def to_mag_db(data):
@@ -131,3 +141,12 @@ def parse_ers(file_path, n_lines, n_samples=4903, pad_to=0):
             row = parse_ers_line(line, pad_to=ers_data.shape[1])
             ers_data[i, :] = row
     return ers_data
+
+
+def read_alos(filepath, n_samp, nlines, dtype=np.csingle, byteswap=False):
+    with open(filepath, 'rb') as fn:
+        load_arr = np.frombuffer(fn.read(), dtype=dtype)
+        load_arr = load_arr.reshape((nlines, n_samp))
+    if byteswap:
+        load_arr = np.array(load_arr.byteswap())
+    return np.array(load_arr)
